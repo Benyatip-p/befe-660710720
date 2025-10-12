@@ -83,6 +83,57 @@ func initDB() {
 	log.Println("successfully connected to database")
 }
 
+// @Summary     Get new books
+// @Description Get latest books ordered by created date
+// @Tags        Books
+// @Accept      json
+// @Produce     json
+// @Param       limit  query    int  false  "Number of books to return (default 5)"
+// @Success     200   {array}   Book
+// @Failure     500   {object}  ErrorResponse
+// @Router      /books/new [get]
+func getNewBooks(c *gin.Context) {
+    rows, err := db.Query(`
+        SELECT id, title, author, isbn, year, price, created_at, updated_at 
+        FROM books 
+        ORDER BY created_at DESC 
+        LIMIT 5
+    `)
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    defer rows.Close()
+
+    var books []Book
+    for rows.Next() {
+        var book Book
+        err := rows.Scan(
+            &book.ID, 
+            &book.Title, 
+            &book.Author, 
+            &book.ISBN, 
+            &book.Year, 
+            &book.Price, 
+            &book.CreatedAt, 
+            &book.UpdatedAt,  
+        )
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+            return
+        }
+        books = append(books, book)
+    }
+
+    if books == nil {
+        books = []Book{}
+    }
+
+    c.JSON(http.StatusOK, books)
+}
+
+
 // @Summary Get all book
 // @Description Get details of a books
 // @Tags Books
@@ -117,6 +168,14 @@ func getAllBooks(c *gin.Context) {
 	c.JSON(http.StatusOK, books)
 }
 
+// @Summary Get book by ID
+// @Description Get details of a book by ID
+// @Tags Books
+// @Produce  json
+// @Param   id   path      int     true  "Book ID"
+// @Success 200  {object}  Book
+// @Failure 404  {object}  ErrorResponse
+// @Router  /books/{id} [get]  
 func getBook(c *gin.Context) {
     id := c.Param("id")
     var book Book
@@ -135,6 +194,14 @@ func getBook(c *gin.Context) {
     c.JSON(http.StatusOK, book)
 }
 
+// @Summary Create a book by ID
+// @Description Create book details (title, author, isbn, year, price) by book ID
+// @Tags Books
+// @Produce  json
+// @Param   book  body      Book    true   "Create book data"
+// @Success 200  {object}  Book
+// @Failure 404  {object}  ErrorResponse
+// @Router  /books [post]  
 func createBook(c *gin.Context) {
     var newBook Book
 
@@ -166,6 +233,15 @@ func createBook(c *gin.Context) {
     c.JSON(http.StatusCreated, newBook) // ใช้ 201 Created
 }
 
+// @Summary Update a book by ID
+// @Description Update book details (title, author, isbn, year, price) by book ID
+// @Tags Books
+// @Produce  json
+// @Param   id   path      int     true  "Book ID"
+// @Param   book  body      Book    true   "Updated book data"
+// @Success 200  {object}  Book
+// @Failure 404  {object}  ErrorResponse
+// @Router  /books/{id} [put]  
 func updateBook(c *gin.Context) {
     var ID int
 	
@@ -199,6 +275,14 @@ func updateBook(c *gin.Context) {
 	c.JSON(http.StatusOK, updateBook)
 }
 
+// @Summary Delete a book by ID
+// @Description Delete book details by book ID
+// @Tags Books
+// @Produce  json
+// @Param   id   path      int     true  "Book ID"
+// @Success 200  {object}  Book
+// @Failure 404  {object}  ErrorResponse
+// @Router  /books/{id} [delete]  
 func deleteBook(c *gin.Context) {
     id := c.Param("id")
 
@@ -251,6 +335,7 @@ func main() {
 	api := r.Group("/api/v1")
 	{
 		api.GET("/books", getAllBooks)
+        api.GET("/books/new", getNewBooks)
 		api.GET("/books/:id", getBook)
 		api.POST("/books", createBook)
 		api.PUT("/books/:id", updateBook)

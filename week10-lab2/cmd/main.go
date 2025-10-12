@@ -18,12 +18,6 @@ import (
 // @BasePath        /api/v1
 func main() {
 	r := gin.Default()
-	// CORS middleware
-	// middleware ช่วยจัดการเรื่อง CORS (Cross-Origin Resource Sharing)
-	// โดยอนุญาตให้ทุกโดเมนสามารถเข้าถึง API ได้
-	// ในการใช้งานจริง ควรตั้งค่า CORS ให้เหมาะสมกับความต้องการของแอปพลิเคชัน
-	// เช่น อนุญาตเฉพาะโดเมนที่เชื่อถือได้เท่านั้น
-	// ดูรายละเอียดเพิ่มเติมได้ที่
 	r.Use(cors.Default())
 
 	// Swagger endpoint
@@ -32,7 +26,7 @@ func main() {
 	// User API routes
 	api := r.Group("/api/v1")
 	{
-		api.GET("/books/:id", handler.GetUserByID) // ใช้ Handler จากไฟล์ user_handler.go
+		api.GET("/books/:id", handler.GetBookByID) // ใช้ Handler จากไฟล์ user_handler.go
 	}
 
 	// Start server

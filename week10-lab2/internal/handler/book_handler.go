@@ -18,8 +18,8 @@ type ErrorResponse struct {
 // @Param   id   path      int     true  "Book ID"
 // @Success 200  {object}  Book
 // @Failure 404  {object}  ErrorResponse
-// @Router /books/{id} [get]
-func GetUserByID(c *gin.Context) {
+// @Router  /books/{id} [get]
+func GetBookByID(c *gin.Context) {
 	id := c.Param("id")
-	c.JSON(200, gin.H{"id": id, "title": "masterint golang"})
+	c.JSON(200, gin.H{"id": id, "title": "mastering golang"})
 }
