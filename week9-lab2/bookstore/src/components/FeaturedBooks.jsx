@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BookCard from './BookCard';
+import LoadingSpinner from './LoadingSpinner';
 
 const FeaturedBooks = () => {
   // กำหนด State สำหรับจัดการข้อมูล
@@ -13,7 +14,7 @@ const FeaturedBooks = () => {
         setLoading(true);
         
         // เรียก API เพื่อดึงข้อมูลหนังสือ
-        const response = await fetch('/api/v1/books/');
+        const response = await fetch('/api/v1/books/featured');
         console.log('Response:', response);
         
         if (!response.ok) {
@@ -22,11 +23,8 @@ const FeaturedBooks = () => {
 
         const data = await response.json();
 
-        // สุ่มหนังสือ 3 เล่ม
-        const shuffled = [...data].sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 3);
-
-        setFeaturedBooks(selected);
+        // ใช้ข้อมูลจาก backend ที่คัดแล้ว
+        setFeaturedBooks(Array.isArray(data) ? data : []);
         setError(null);
         
       } catch (err) {

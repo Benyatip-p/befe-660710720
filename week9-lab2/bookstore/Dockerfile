@@ -12,7 +12,11 @@ RUN npm run build
 # alpine คือเวอร์ชันที่มีขนาดเล็กของ nginx
 FROM nginx:alpine
 
+# คัดลอกไฟล์ build (frontend) ไปยังโฟลเดอร์ที่ nginx ให้บริการ
 COPY --from=builder /app/build /usr/share/nginx/html
+
+# คัดลอกไฟล์คอนฟิก nginx เพื่อ proxy /api ไป backend (port 8080)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

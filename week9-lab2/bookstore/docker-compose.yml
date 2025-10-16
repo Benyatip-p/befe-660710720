@@ -1,0 +1,11 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    # Ensure the container can reach the host's backend (Linux-friendly)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
