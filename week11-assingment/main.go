@@ -117,7 +117,7 @@ func getNewBooks(c *gin.Context) {
     }
 
     rows, err := db.Query(`
-        SELECT id, title, author, isbn, year, price, created_at, updated_at
+        SELECT id, title, author, isbn, year, price, category, original_price, discount, cover_image, rating, reviews_count, is_new, pages, language, publisher, description, created_at, updated_at
         FROM books
         ORDER BY created_at DESC
         LIMIT $1
@@ -139,6 +139,17 @@ func getNewBooks(c *gin.Context) {
             &book.ISBN,
             &book.Year,
             &book.Price,
+            &book.Category,
+            &book.OriginalPrice,
+            &book.Discount,
+            &book.CoverImage,
+            &book.Rating,
+            &book.ReviewsCount,
+            &book.IsNew,
+            &book.Pages,
+            &book.Language,
+            &book.Publisher,
+            &book.Description,
             &book.CreatedAt,
             &book.UpdatedAt,
         )
@@ -172,11 +183,11 @@ func getAllBooks(c *gin.Context) {
     category := c.Query("category")
     if category != "" {
         rows, err = db.Query(
-            "SELECT id, title, author, isbn, year, price, category, created_at, updated_at FROM books WHERE category = $1",
+            "SELECT id, title, author, isbn, year, price, category, original_price, discount, cover_image, rating, reviews_count, is_new, pages, language, publisher, description, created_at, updated_at FROM books WHERE category = $1",
             category,
         )
     } else {
-        rows, err = db.Query("SELECT id, title, author, isbn, year, price, category, created_at, updated_at FROM books")
+        rows, err = db.Query("SELECT id, title, author, isbn, year, price, category, original_price, discount, cover_image, rating, reviews_count, is_new, pages, language, publisher, description, created_at, updated_at FROM books")
     }
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -187,9 +198,10 @@ func getAllBooks(c *gin.Context) {
     var books []Book
     for rows.Next() {
         var book Book
-        err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.CreatedAt, &book.UpdatedAt)
+        err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.OriginalPrice, &book.Discount, &book.CoverImage, &book.Rating, &book.ReviewsCount, &book.IsNew, &book.Pages, &book.Language, &book.Publisher, &book.Description, &book.CreatedAt, &book.UpdatedAt)
         if err != nil {
-            // handle error
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+            return
         }
         books = append(books, book)
     }
@@ -213,7 +225,7 @@ func getBook(c *gin.Context) {
     var book Book
 
     // QueryRow ใช้เมื่อคาดว่าจะได้ผลลัพธ์ 0 หรือ 1 แถว
-    err := db.QueryRow("SELECT id, title, author FROM books WHERE id = $1", id).Scan(&book.ID, &book.Title, &book.Author)
+    err := db.QueryRow("SELECT id, title, author, isbn, year, price, category, original_price, discount, cover_image, rating, reviews_count, is_new, pages, language, publisher, description, created_at, updated_at FROM books WHERE id = $1", id).Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.OriginalPrice, &book.Discount, &book.CoverImage, &book.Rating, &book.ReviewsCount, &book.IsNew, &book.Pages, &book.Language, &book.Publisher, &book.Description, &book.CreatedAt, &book.UpdatedAt)
 
     if err == sql.ErrNoRows {
         c.JSON(http.StatusNotFound, gin.H{"error": "book not found"})
@@ -247,10 +259,10 @@ func createBook(c *gin.Context) {
     var createdAt, updatedAt time.Time
 
     err := db.QueryRow(
-        `INSERT INTO books (title, author, isbn, year, price)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO books (title, author, isbn, year, price, category, original_price, discount, cover_image, rating, reviews_count, is_new, pages, language, publisher, description)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
          RETURNING id, created_at, updated_at`,
-        newBook.Title, newBook.Author, newBook.ISBN, newBook.Year, newBook.Price,
+        newBook.Title, newBook.Author, newBook.ISBN, newBook.Year, newBook.Price, newBook.Category, newBook.OriginalPrice, newBook.Discount, newBook.CoverImage, newBook.Rating, newBook.ReviewsCount, newBook.IsNew, newBook.Pages, newBook.Language, newBook.Publisher, newBook.Description,
     ).Scan(&id, &createdAt, &updatedAt)
 
     if err != nil {
@@ -288,11 +300,10 @@ func updateBook(c *gin.Context) {
     var updatedAt time.Time
     err := db.QueryRow(
         `UPDATE books
-         SET title = $1, author = $2, isbn = $3, year = $4, price = $5
-         WHERE id = $6
+         SET title = $1, author = $2, isbn = $3, year = $4, price = $5, category = $6, original_price = $7, discount = $8, cover_image = $9, rating = $10, reviews_count = $11, is_new = $12, pages = $13, language = $14, publisher = $15, description = $16
+         WHERE id = $17
          RETURNING id, updated_at`,
-        updateBook.Title, updateBook.Author, updateBook.ISBN,
-        updateBook.Year, updateBook.Price, id,
+        updateBook.Title, updateBook.Author, updateBook.ISBN, updateBook.Year, updateBook.Price, updateBook.Category, updateBook.OriginalPrice, updateBook.Discount, updateBook.CoverImage, updateBook.Rating, updateBook.ReviewsCount, updateBook.IsNew, updateBook.Pages, updateBook.Language, updateBook.Publisher, updateBook.Description, id,
     ).Scan(&ID, &updatedAt)
 
     if err == sql.ErrNoRows {
@@ -421,7 +432,7 @@ func searchBooks(c *gin.Context) {
 	pattern := "%" + q + "%"
 
 	rows, err := db.Query(`
-		SELECT id, title, author, isbn, year, price, category, created_at, updated_at
+		SELECT id, title, author, isbn, year, price, category, original_price, discount, cover_image, rating, reviews_count, is_new, pages, language, publisher, description, created_at, updated_at
 		FROM books
 		WHERE title ILIKE $1 OR author ILIKE $1 OR description ILIKE $1
 		ORDER BY rating DESC, reviews_count DESC, created_at DESC
@@ -436,7 +447,7 @@ func searchBooks(c *gin.Context) {
 	var books []Book
 	for rows.Next() {
 		var book Book
-		if err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.CreatedAt, &book.UpdatedAt); err != nil {
+		if err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.OriginalPrice, &book.Discount, &book.CoverImage, &book.Rating, &book.ReviewsCount, &book.IsNew, &book.Pages, &book.Language, &book.Publisher, &book.Description, &book.CreatedAt, &book.UpdatedAt); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -457,7 +468,7 @@ func searchBooks(c *gin.Context) {
 // @Router /books/featured [get]
 func getFeaturedBooks(c *gin.Context) {
 	rows, err := db.Query(`
-		SELECT id, title, author, isbn, year, price, category, created_at, updated_at
+		SELECT id, title, author, isbn, year, price, category, original_price, discount, cover_image, rating, reviews_count, is_new, pages, language, publisher, description, created_at, updated_at
 		FROM books
 		WHERE rating >= 4.5 OR reviews_count >= 100
 		ORDER BY rating DESC, reviews_count DESC, created_at DESC
@@ -472,7 +483,7 @@ func getFeaturedBooks(c *gin.Context) {
 	var books []Book
 	for rows.Next() {
 		var book Book
-		if err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.CreatedAt, &book.UpdatedAt); err != nil {
+		if err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.OriginalPrice, &book.Discount, &book.CoverImage, &book.Rating, &book.ReviewsCount, &book.IsNew, &book.Pages, &book.Language, &book.Publisher, &book.Description, &book.CreatedAt, &book.UpdatedAt); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -493,7 +504,7 @@ func getFeaturedBooks(c *gin.Context) {
 // @Router /books/discounted [get]
 func getDiscountedBooks(c *gin.Context) {
 	rows, err := db.Query(`
-		SELECT id, title, author, isbn, year, price, category, created_at, updated_at
+		SELECT id, title, author, isbn, year, price, category, original_price, discount, cover_image, rating, reviews_count, is_new, pages, language, publisher, description, created_at, updated_at
 		FROM books
 		WHERE discount > 0
 		ORDER BY discount DESC, updated_at DESC
@@ -508,7 +519,7 @@ func getDiscountedBooks(c *gin.Context) {
 	var books []Book
 	for rows.Next() {
 		var book Book
-		if err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.CreatedAt, &book.UpdatedAt); err != nil {
+		if err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.ISBN, &book.Year, &book.Price, &book.Category, &book.OriginalPrice, &book.Discount, &book.CoverImage, &book.Rating, &book.ReviewsCount, &book.IsNew, &book.Pages, &book.Language, &book.Publisher, &book.Description, &book.CreatedAt, &book.UpdatedAt); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

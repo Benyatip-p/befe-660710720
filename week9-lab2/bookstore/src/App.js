@@ -16,6 +16,7 @@ import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import StoreManagerPage from './pages/StoreManagerPage';
 import AddBookPage from './pages/AddBookPage';
+import EditBookPage from './pages/EditBookPage';
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/store-manager" element={<StoreManagerPage />} />
         <Route path="/store-manager/add-book" element={<AddBookPage />} />
+        <Route path="/store-manager/edit/:id" element={<EditBookPage />} />
 
 
         {/* Public Routes - With Navbar/Footer */}

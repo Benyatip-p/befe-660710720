@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PencilIcon, TrashIcon } from '@heroicons/react/outline';
+import { LogoutIcon } from '@heroicons/react/outline';
 
 const StoreManagerPage = () => {
   const navigate = useNavigate();
@@ -40,26 +42,12 @@ const StoreManagerPage = () => {
     navigate('/store-manager/add-book');
   };
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm('ต้องการลบหนังสือเล่มนี้หรือไม่?');
-    if (!confirmDelete) return;
+  //const handleDelete = async (book) => {
+    //setDeleteConfirm(book);
+  //};
 
-    try {
-      const res = await fetch(`/api/v1/books/${id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        throw new Error(`Delete failed: ${res.status}`);
-      }
-      // Refresh list after delete
-      setBooks((prev) => prev.filter((b) => b.id !== id));
-    } catch (e) {
-      alert('ลบไม่สำเร็จ: ' + (e.message || 'unknown error'));
-    }
-  };
-
-  const handleEdit = (id) => {
-    // Placeholder navigation (implement edit page later if needed)
-    // Could navigate to /store-manager/edit/:id in the future
-    navigate('/store-manager/add-book', { state: { editId: id } });
+  const handleEdit = (bookId) => {
+    navigate(`/store-manager/edit/${bookId}`);
   };
 
   const handleLogout = () => {
@@ -70,30 +58,34 @@ const StoreManagerPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg">
+      <header className="bg-gradient-to-r from-blue-600 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">BookStore - Store Manager</h1>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-            >
-              ออกจากระบบ
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleAddBook}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+              >
+                + เพิ่มหนังสือ
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700
+                rounded-lg transition-colors"
+              >
+                <LogoutIcon className="h-5 w-5" />
+                <span>ออกจากระบบ</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900">รายการหนังสือ</h2>
-          <button
-            onClick={handleAddBook}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            + เพิ่มหนังสือ
-          </button>
         </div>
 
         {/* Loading / Error */}
@@ -131,15 +123,17 @@ const StoreManagerPage = () => {
                         <div className="inline-flex gap-2">
                           <button
                             onClick={() => handleEdit(b.id)}
-                            className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                            className="p-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                            title="แก้ไข"
                           >
-                            แก้ไข
+                            <PencilIcon className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(b.id)}
-                            className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                            //onClick={() => handleDelete(b)}
+                            className="p-2 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
+                            title="ลบ"
                           >
-                            ลบ
+                            <TrashIcon className="w-4 h-4" />
                           </button>
                         </div>
                       </td>

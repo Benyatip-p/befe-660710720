@@ -151,16 +151,16 @@ const AddBookPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-white-700 text-black shadow-lg">
+      <header className="bg-gradient-to-r from-blue-600 to-white-700 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <BookOpenIcon className="h-8 w-8" />
-              <h1 className="text-2xl font-bold">BookStore - BackOffice</h1>
+              <h1 className="text-2xl font-bold text-white">BookStore - BackOffice</h1>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30
+              className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700
                 rounded-lg transition-colors"
             >
               <LogoutIcon className="h-5 w-5" />
