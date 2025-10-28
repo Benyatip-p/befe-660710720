@@ -17,7 +17,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
-	"github.com/joho/godotenv"
 )
 
 // ===================== Response Types =====================
@@ -266,13 +265,7 @@ func logAudit(userID int, action, resource string, resourceID interface{}, detai
 }
 
 func initDB() {
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Warning: .env file not found, using environment variables")
-	}
-
-	var dbErr error
+	var err error
 
 	host := getEnv("DB_HOST", "")
 	name := getEnv("DB_NAME", "")
@@ -282,8 +275,8 @@ func initDB() {
 
 	conSt := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, name)
 	// fmt.Println(conSt)
-	db, dbErr = sql.Open("postgres", conSt)
-	if dbErr != nil {
+	db, err = sql.Open("postgres", conSt)
+	if err != nil {
 		log.Fatal("failed to open database")
 	}
 
@@ -296,9 +289,9 @@ func initDB() {
 	// กำหนดอายุของ Connection
 	db.SetConnMaxLifetime(5 * time.Minute)
 
-	dbErr = db.Ping()
-	if dbErr != nil {
-		log.Fatal("failed to connect to database", dbErr)
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("failed to connect to database", err)
 	}
 	log.Println("successfully connected to database")
 }
@@ -718,11 +711,25 @@ func main() {
 	api.Use(authMiddleware()) // ทุก endpoint ต้อง authenticate
 	{
 		// Books endpoints with permission checks
-		api.GET("/books",requirePermission("books:read"), getAllBooks)
-		api.GET("/books/:id", requirePermission("books:read"), getBook)
-		api.POST("/books", requirePermission("books:create"), createBook)
-		api.PUT("/books/:id", requirePermission("books:update"), updateBook)
-		api.DELETE("/books/:id", requirePermission("books:delete"), deleteBook)
+		api.GET("/books",
+			requirePermission("books:read"),
+			getAllBooks)
+
+		api.GET("/books/:id",
+			requirePermission("books:read"),
+			getBook)
+
+		api.POST("/books",
+			requirePermission("books:create"),
+			createBook)
+
+		api.PUT("/books/:id",
+			requirePermission("books:update"),
+			updateBook)
+
+		api.DELETE("/books/:id",
+			requirePermission("books:delete"),
+			deleteBook)
 	}
 
 	r.Run(":8080")

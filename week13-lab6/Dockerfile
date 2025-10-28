@@ -2,7 +2,6 @@
 FROM golang:1.24.5 AS builder
 
 WORKDIR /app
-ENV GOTOOLCHAIN=auto
 
 # ดาวน์โหลด dependencies
 COPY go.mod go.sum ./
@@ -10,7 +9,7 @@ RUN go mod download
 
 # คัดลอก source code และ build application
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o week13-lab6 .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o main .
 
 # Stage 2: Final image
 FROM alpine:latest
@@ -21,9 +20,8 @@ RUN apk --no-cache add ca-certificates curl
 WORKDIR /root
 
 # คัดลอก binary file จาก builder stage
-COPY --from=builder /app/week13-lab6 .
+COPY --from=builder /app/main .
 # คัดลอกไฟล์เอกสาร Swagger
 COPY --from=builder /app/docs ./docs
 
-EXPOSE 8080
-ENTRYPOINT ["./week13-lab6"]
+ENTRYPOINT ["./main"]
